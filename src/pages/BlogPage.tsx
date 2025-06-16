@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { fetchBlogPosts } from '../services/github';
+import { fetchBlogPosts, debugGitHubConnection } from '../services/github';
 import { useAuth } from '../context/AuthContext';
 import type { BlogPost } from '../types/blog';
 
@@ -19,15 +19,23 @@ export default function BlogPage() {
     const loadPosts = async () => {
         try {
             setLoading(true);
+            console.log('Loading blog posts...');
             const fetchedPosts = await fetchBlogPosts();
+            console.log(`Loaded ${fetchedPosts.length} posts:`, fetchedPosts.map(p => ({ title: p.title, slug: p.slug, id: p.id })));
             setPosts(fetchedPosts);
             setError(null);
         } catch (err) {
             setError('無法載入教會動態，請稍後再試。');
-            console.error(err);
+            console.error('Error loading posts:', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDebug = async () => {
+        console.log('🔧 Manual debug triggered');
+        await debugGitHubConnection();
+        await loadPosts();
     };
 
     const formatDate = (dateString: string) => {
@@ -89,6 +97,10 @@ export default function BlogPage() {
                                     <Button variant="outline">管理員登入</Button>
                                 </Link>
                             )}
+                            {/* Debug button - remove in production */}
+                            <Button variant="ghost" onClick={handleDebug} className="text-xs">
+                                🔧 Debug
+                            </Button>
                         </div>
                     </div>
                 </div>

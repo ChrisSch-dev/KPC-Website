@@ -2,28 +2,12 @@ export interface BlogPost {
     id: string;
     title: string;
     content: string;
-    excerpt?: string;
+    excerpt: string;
     author: string;
     createdAt: string;
     updatedAt: string;
     slug: string;
-    tags?: string[];
-}
-
-export interface GitHubFile {
-    name: string;
-    path: string;
-    sha: string;
-    size: number;
-    url: string;
-    download_url: string;
-    content?: string;
-}
-
-export interface AuthContextType {
-    isAuthenticated: boolean;
-    login: (password: string) => Promise<boolean>;
-    logout: () => void;
+    tags: string[];
 }
 
 export interface BlogFormData {
@@ -31,4 +15,16 @@ export interface BlogFormData {
     content: string;
     author: string;
     tags: string;
+}
+
+export interface GitHubFile {
+    name: string;
+    path: string;
+    type: 'file' | 'dir';
+    size: number;
+    sha: string;
+    url: string;
+    git_url: string;
+    html_url: string;
+    download_url: string | null;
 }
