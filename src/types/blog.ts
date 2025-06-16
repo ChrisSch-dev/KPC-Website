@@ -31,6 +31,6 @@ export interface GitHubFile {
 
 export interface AuthContextType {
     isAuthenticated: boolean,
-    login: any,
-    logout: any
+    login: (password: string) => Promise<boolean>,
+    logout: () => void
 }
