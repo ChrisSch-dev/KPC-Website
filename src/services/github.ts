@@ -54,7 +54,7 @@ export async function fetchBlogPost(slug: string): Promise<BlogPost | null> {
 export async function saveBlogPost(formData: BlogFormData): Promise<boolean> {
     try {
         const slug = generateSlug(formData.title);
-        const filename = `${slug}.md`;
+        const filename = `${Date.now}-${slug}.md`;
         const filePath = `${POSTS_PATH}/${filename}`;
 
         const frontMatter = createFrontMatter(formData, slug);
