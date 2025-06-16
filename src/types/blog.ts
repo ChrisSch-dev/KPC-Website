@@ -28,3 +28,9 @@ export interface GitHubFile {
     html_url: string;
     download_url: string | null;
 }
+
+export interface AuthContextType {
+    isAuthenticated: boolean,
+    login: any,
+    logout: any
+}
