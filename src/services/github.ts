@@ -11,42 +11,26 @@ const POSTS_PATH = 'posts';
 
 export async function fetchBlogPosts(): Promise<BlogPost[]> {
     try {
-        console.log('🔄 Starting fetchBlogPosts...');
-        console.log('📁 GitHub config:', {
-            owner: GITHUB_OWNER || 'NOT_SET',
-            repo: GITHUB_REPO || 'NOT_SET',
-            path: POSTS_PATH
-        });
-
         const { data } = await octokit.rest.repos.getContent({
             owner: GITHUB_OWNER,
             repo: GITHUB_REPO,
             path: POSTS_PATH,
         });
 
-        console.log('📂 GitHub response type:', Array.isArray(data) ? 'array' : typeof data);
-
         if (!Array.isArray(data)) {
             console.warn('❌ Expected array from GitHub, got:', typeof data);
             return [];
         }
 
-        console.log(`📄 Found ${data.length} total files in ${POSTS_PATH}`);
-        const markdownFiles = data.filter(file => file.name.endsWith('.md'));
-        console.log(`📝 Found ${markdownFiles.length} markdown files:`, markdownFiles.map(f => f.name));
-
         const posts: BlogPost[] = [];
 
         for (const file of data as GitHubFile[]) {
             if (file.name.endsWith('.md')) {
-                console.log(`🔍 Processing file: ${file.name}`);
                 try {
                     const content = await fetchFileContent(file.path);
-                    console.log(`✅ Fetched content for ${file.name}, length: ${content.length}`);
 
                     const post = parseMarkdownPost(content, file.name);
                     if (post) {
-                        console.log(`✅ Successfully parsed post: ${post.title} (slug: ${post.slug})`);
                         posts.push(post);
                     } else {
                         console.warn(`❌ Failed to parse post: ${file.name}`);
@@ -185,8 +169,6 @@ function parseMarkdownPost(content: string, filename: string): BlogPost | null {
 
         // If no proper front matter found, create a basic post
         if (frontMatterStart !== 0 || frontMatterEnd === -1) {
-            console.warn(`⚠️  No valid front matter found in ${filename}, creating basic post`);
-            console.log(`   Front matter start: ${frontMatterStart}, end: ${frontMatterEnd}`);
             const id = filename.replace('.md', '');
             const postContent = normalizedContent;
             const basicPost = {
@@ -200,17 +182,14 @@ function parseMarkdownPost(content: string, filename: string): BlogPost | null {
                 slug: id,
                 tags: [],
             };
-            console.log(`✅ Created basic post: ${basicPost.title}`);
             return basicPost;
         }
 
         const frontMatter = lines.slice(frontMatterStart + 1, frontMatterEnd).join('\n');
         const postContent = lines.slice(frontMatterEnd + 1).join('\n').trim();
-        console.log(`📝 Front matter length: ${frontMatter.length}, content length: ${postContent.length}`);
 
         const metadata: Record<string, string> = {};
         const frontMatterLines = frontMatter.split('\n').filter(line => line.trim() !== '');
-        console.log(`🔍 Processing ${frontMatterLines.length} front matter lines`);
 
         for (const line of frontMatterLines) {
             const colonIndex = line.indexOf(':');
@@ -223,8 +202,6 @@ function parseMarkdownPost(content: string, filename: string): BlogPost | null {
                 }
             }
         }
-
-        console.log(`📋 Extracted metadata:`, metadata);
 
         // For new format files, use the slug from front matter
         // For old format files, use filename without .md extension
@@ -243,10 +220,8 @@ function parseMarkdownPost(content: string, filename: string): BlogPost | null {
             tags: metadata.tags ? metadata.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean) : [],
         };
 
-        console.log(`✅ Successfully parsed ${filename} -> ${parsedPost.title} (slug: ${parsedPost.slug})`);
         return parsedPost;
     } catch (error) {
-        console.error(`💥 Error parsing markdown post ${filename}:`, error);
         // Return a basic post even if parsing fails
         const id = filename.replace('.md', '');
         const fallbackPost = {
@@ -260,7 +235,6 @@ function parseMarkdownPost(content: string, filename: string): BlogPost | null {
             slug: id,
             tags: [],
         };
-        console.log(`🔄 Created fallback post: ${fallbackPost.title}`);
         return fallbackPost;
     }
 }
@@ -301,29 +275,14 @@ tags: "${tags.join(', ')}"
 
 // Debug utility function to test GitHub connectivity
 export async function debugGitHubConnection(): Promise<void> {
-    console.log('🔧 === GITHUB DEBUG UTILITY ===');
-
-    // Check environment variables
-    console.log('🔍 Environment check:');
-    console.log('  VITE_GITHUB_TOKEN:', import.meta.env.VITE_GITHUB_TOKEN ? 'SET' : 'NOT SET');
-    console.log('  VITE_GITHUB_OWNER:', import.meta.env.VITE_GITHUB_OWNER || 'NOT SET');
-    console.log('  VITE_GITHUB_REPO:', import.meta.env.VITE_GITHUB_REPO || 'NOT SET');
-
     try {
         // Test basic repo access
-        console.log('🔍 Testing repository access...');
         const repoInfo = await octokit.rest.repos.get({
             owner: GITHUB_OWNER,
             repo: GITHUB_REPO,
         });
-        console.log('✅ Repository access successful:', {
-            name: repoInfo.data.name,
-            private: repoInfo.data.private,
-            default_branch: repoInfo.data.default_branch
-        });
 
         // Test posts directory access
-        console.log('🔍 Testing posts directory access...');
         const { data } = await octokit.rest.repos.getContent({
             owner: GITHUB_OWNER,
             repo: GITHUB_REPO,
@@ -342,6 +301,4 @@ export async function debugGitHubConnection(): Promise<void> {
     } catch (error) {
         console.error('💥 GitHub connection test failed:', error);
     }
-
-    console.log('🔧 === END DEBUG ===');
 }
