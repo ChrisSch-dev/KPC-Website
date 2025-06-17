@@ -58,11 +58,7 @@ export async function fetchBlogPosts(): Promise<BlogPost[]> {
             }
         }
 
-        console.log(`🎉 Successfully loaded ${posts.length} blog posts`);
-        console.log('📋 Posts summary:', posts.map(p => ({ title: p.title, slug: p.slug, createdAt: p.createdAt })));
-
         const sortedPosts = posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        console.log('📅 Posts after sorting:', sortedPosts.map(p => ({ title: p.title, createdAt: p.createdAt })));
 
         return sortedPosts;
     } catch (error) {
